@@ -1,0 +1,176 @@
+/*
+ * Motion for the VGS APP pages. Two moments carry it:
+ *   1. the page opening: the V lines draw themselves, the text arrives in
+ *      order, and the phone plays one booking (slot picked, button ready,
+ *      "booked" notice);
+ *   2. the plans: a card shows what it includes when you point at it.
+ * Plus small answers to actions (questions open smoothly, the steps line
+ * draws when it comes into view).
+ *
+ * Every animated element's resting style is its FINAL state; the keyframes
+ * only describe where it comes from. So with reduced motion (animations
+ * switched off) everything is simply shown, complete.
+ */
+
+.vgs-root {
+  --vgs-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  interpolate-size: allow-keywords;
+}
+
+/* ── 1. Page opening ─────────────────────────────────────────────────────── */
+
+.vgs-draw {
+  stroke-dasharray: 1;
+  animation: vgs-draw 1.6s var(--vgs-ease) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes vgs-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.vgs-rise {
+  animation: vgs-rise 0.9s var(--vgs-ease) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes vgs-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The phone plays one booking. */
+.vgs-pick {
+  animation: vgs-pick 0.45s var(--vgs-ease) both;
+  animation-delay: 1.5s;
+}
+@keyframes vgs-pick {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: none; }
+}
+.vgs-tap {
+  animation: vgs-tap 0.7s ease-out both;
+  animation-delay: 1.45s;
+  opacity: 0;
+}
+@keyframes vgs-tap {
+  0% { opacity: 0.45; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+.vgs-ready {
+  animation: vgs-ready 0.5s ease both;
+  animation-delay: 1.9s;
+}
+@keyframes vgs-ready {
+  from { background-color: #d9dddf; color: #5e6467; }
+  to { background-color: #000; color: #fff; }
+}
+.vgs-booked {
+  animation: vgs-booked 0.6s var(--vgs-ease) both;
+  animation-delay: 2.6s;
+}
+@keyframes vgs-booked {
+  from { opacity: 0; transform: translateY(-120%); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ── 2. Plans ────────────────────────────────────────────────────────────── */
+
+/* Default (touch screens, no mouse): everything open, one under the other. */
+.vgs-plan-hint,
+.vgs-plan-mark { display: none; }
+.vgs-plan-details { margin-top: 1.5rem; }
+
+@media (hover: hover) and (pointer: fine) {
+  .vgs-plan {
+    transition: transform 0.45s var(--vgs-ease), opacity 0.35s ease;
+  }
+  .vgs-plans:has(.vgs-plan:hover) .vgs-plan:not(:hover) { opacity: 0.55; }
+  .vgs-plan:hover,
+  .vgs-plan:focus-within { transform: translateY(-6px); }
+
+  /* Resting text and the full list share one place; the card keeps the
+     height of the longer one, so nothing below moves when it opens. */
+  .vgs-plan-body { display: grid; }
+  .vgs-plan-body > * { grid-area: 1 / 1; }
+
+  .vgs-plan-rest {
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease, transform 0.45s var(--vgs-ease);
+  }
+  .vgs-plan-hint { display: flex; }
+  .vgs-plan-mark {
+    display: block;
+    transition: opacity 0.4s ease, transform 0.6s var(--vgs-ease);
+    transform-origin: 50% 100%;
+  }
+
+  .vgs-plan-details {
+    margin-top: 0;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.55s var(--vgs-ease);
+  }
+  .vgs-plan-details li,
+  .vgs-plan-details > p {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.45s var(--vgs-ease);
+    transition-delay: calc(var(--i, 0) * 45ms + 90ms);
+  }
+
+  .vgs-plan:hover .vgs-plan-details,
+  .vgs-plan:focus-within .vgs-plan-details { clip-path: inset(0 0 0 0); }
+  .vgs-plan:hover .vgs-plan-details li,
+  .vgs-plan:hover .vgs-plan-details > p,
+  .vgs-plan:focus-within .vgs-plan-details li,
+  .vgs-plan:focus-within .vgs-plan-details > p { opacity: 1; transform: none; }
+  .vgs-plan:hover .vgs-plan-rest,
+  .vgs-plan:focus-within .vgs-plan-rest { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Price change monthly <-> annual. */
+.vgs-price { animation: vgs-rise 0.45s var(--vgs-ease) both; }
+
+/* ── 3. Steps line and questions ─────────────────────────────────────────── */
+
+.vgs-steps-line {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1.4s var(--vgs-ease) 0.15s;
+}
+.vgs-steps-dot {
+  opacity: 0;
+  transform: rotate(45deg) scale(0.4);
+  transition: opacity 0.3s ease, transform 0.45s var(--vgs-ease);
+  transition-delay: calc(var(--i, 0) * 0.45s + 0.15s);
+}
+[data-inview] .vgs-steps-line { transform: scaleX(1); }
+[data-inview] .vgs-steps-dot { opacity: 1; transform: rotate(45deg); }
+
+.vgs-root details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 0.4s var(--vgs-ease), content-visibility 0.4s allow-discrete;
+}
+.vgs-root details[open]::details-content { block-size: auto; }
+
+/* ── Phone menu: the two bars turn into a cross, the panel drops in ────────── */
+.vgs-menu-bar { transition: transform 0.3s var(--vgs-ease), top 0.3s var(--vgs-ease), bottom 0.3s var(--vgs-ease); }
+.vgs-menu[open] .vgs-menu-bar:first-child { top: 5px; transform: rotate(45deg); }
+.vgs-menu[open] .vgs-menu-bar:last-child { bottom: 5px; transform: rotate(-45deg); }
+.vgs-menu[open] > nav { animation: vgs-rise 0.3s var(--vgs-ease) both; }
+
+/* ── Reduced motion: no movement, everything shown as it ends up ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  .vgs-root *,
+  .vgs-root *::before,
+  .vgs-root *::after,
+  .vgs-root details::details-content {
+    animation: none !important;
+    transition: none !important;
+  }
+  .vgs-steps-line { transform: none; }
+  .vgs-steps-dot { opacity: 1; transform: rotate(45deg); }
+  .vgs-plans:has(.vgs-plan:hover) .vgs-plan:not(:hover) { opacity: 1; }
+}
